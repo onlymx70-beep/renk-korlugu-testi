@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Sarı-mavi rəng çalarlarını müqayisə etməyə kömək edən sadə ev testi. Tibbi diaqnoz deyil.">
+<title>Rəng Görmə Testi — Sarı & Mavi</title>
+<style>
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#18212f;
+  --muted:#667085;
+  --border:#e4e7ec;
+  --accent:#2563eb;
+  --accent2:#eff6ff;
+  --success:#15803d;
+  --danger:#b42318;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;
+}
+.container{width:min(920px,92%);margin:auto}
+header{padding:28px 0 18px}
+.brand{font-weight:800;font-size:22px}
+.badge{
+  display:inline-block;margin-top:10px;padding:6px 10px;border-radius:999px;
+  background:var(--accent2);color:var(--accent);font-size:13px;font-weight:700
+}
+.hero{padding:15px 0 25px}
+h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:0 0 14px}
+.hero p{color:var(--muted);max-width:720px}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:22px;
+  padding:22px;box-shadow:0 8px 28px rgba(16,24,40,.05);margin:18px 0
+}
+.note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.progress{
+  height:9px;background:#eef2f6;border-radius:99px;overflow:hidden;margin:10px 0 20px
+}
+.progress > div{height:100%;background:var(--accent);width:0;transition:.25s}
+.question{font-size:19px;font-weight:750;margin-bottom:16px}
+.swatches{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+button.swatch{
+  border:2px solid transparent;min-height:150px;border-radius:18px;cursor:pointer;
+  transition:.18s transform,.18s border-color;display:flex;align-items:flex-end;
+  justify-content:center;padding:14px;font-weight:800;font-size:18px;color:#111827
+}
+button.swatch:hover{transform:translateY(-2px)}
+button.swatch:focus-visible{outline:3px solid #93c5fd;outline-offset:3px}
+.swatch span{background:rgba(255,255,255,.86);padding:5px 10px;border-radius:10px}
+.controls{display:flex;gap:10px;justify-content:space-between;margin-top:18px}
+button.action{
+  border:0;border-radius:13px;padding:12px 17px;font-weight:750;cursor:pointer;
+  background:var(--accent);color:white
+}
+button.action.secondary{background:#eef2f6;color:#344054}
+button.action:disabled{opacity:.5;cursor:not-allowed}
+.result{display:none}
+.score{font-size:42px;font-weight:850;margin:4px 0}
+.ok{color:var(--success)}.warn{color:#b54708}
+.footer{color:var(--muted);font-size:13px;padding:25px 0 40px}
+.small{font-size:13px;color:var(--muted)}
+@media(max-width:620px){
+  .swatches{grid-template-columns:1fr}
+  button.swatch{min-height:125px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">Rəng Görmə Testi</div>
+    <div class="badge">Sarı • Mavi çalarları</div>
+  </header>
+
+  <section class="hero">
+    <h1>Rəngləri nə qədər yaxın ayırd edə bilirsən?</h1>
+    <p>
+      Bu sadə test sarı, mavi və yaşıl-mavi kimi bir-birinə yaxın çalarları
+      müqayisə etməyə kömək edir. Ekran parlaqlığı və cihaz fərqi nəticəyə təsir edə bilər.
+    </p>
+  </section>
+
+  <section class="card note">
+    <strong>Qeyd:</strong> Bu sayt tibbi diaqnoz qoymur. Rəng görmənlə bağlı narahatlığın varsa,
+    göz həkimi və ya optometrist tərəfindən peşəkar test daha uyğundur.
+  </section>
+
+  <section class="card" id="testCard">
+    <div class="small" id="counter">Sual 1 / 10</div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div class="question" id="questionText"></div>
+    <div class="swatches" id="swatches"></div>
+    <div class="controls">
+      <button class="action secondary" id="restartBtn" type="button" style="visibility:hidden">Yenidən</button>
+      <button class="action" id="nextBtn" type="button" disabled>Növbəti</button>
+    </div>
+  </section>
+
+  <section class="card result" id="resultCard">
+    <div class="small">Test tamamlandı</div>
+    <div class="score" id="score"></div>
+    <p id="resultText"></p>
+    <button class="action" id="againBtn" type="button">Yenidən test et</button>
+  </section>
+
+  <div class="footer">
+    © 2026 Rəng Görmə Testi · Sadə ev yoxlaması · Tibbi diaqnoz deyil
+  </div>
+</div>
+
+<script>
+const questions = [
+  {q:"Hansını daha çox sarıya yaxın görürsən?", a:["#f3df5a","#c8d968"], correct:0},
+  {q:"Hansını daha çox maviya yaxın görürsən?", a:["#6fb7d8","#77b98f"], correct:0},
+  {q:"Hansını daha çox mavi-yaşıl görürsən?", a:["#74b9a8","#7398cf"], correct:0},
+  {q:"Hansını daha çox sarı-yaşıl görürsən?", a:["#c7d46b","#d7b95d"], correct:0},
+  {q:"Hansını daha çox mavi görürsən?", a:["#78a9d6","#71b3b0"], correct:0},
+  {q:"Hansını daha çox sarı görürsən?", a:["#e8cc5b","#b9cf72"], correct:0},
+  {q:"Hansını daha çox mavi-yaşıl görürsən?", a:["#70b1ac","#819bce"], correct:0},
+  {q:"Hansını daha çox sarıya yaxın görürsən?", a:["#d9c75f","#add078"], correct:0},
+  {q:"Hansını daha çox maviya yaxın görürsən?", a:["#6caed2","#74b99d"], correct:0},
+  {q:"Hansını daha çox sarı görürsən?", a:["#edd35b","#b7cd73"], correct:0}
+];
+
+let index=0, score=0, selected=null;
+const qText=document.getElementById("questionText");
+const swatches=document.getElementById("swatches");
+const nextBtn=document.getElementById("nextBtn");
+const counter=document.getElementById("counter");
+const progressBar=document.getElementById("progressBar");
+const resultCard=document.getElementById("resultCard");
+const testCard=document.getElementById("testCard");
+const scoreEl=document.getElementById("score");
+const resultText=document.getElementById("resultText");
+
+function render(){
+  selected=null;
+  nextBtn.disabled=true;
+  const item=questions[index];
+  counter.textContent=`Sual ${index+1} / ${questions.length}`;
+  progressBar.style.width=`${(index/questions.length)*100}%`;
+  qText.textContent=item.q;
+  swatches.innerHTML="";
+  // Shuffle positions so the correct answer isn't always on the left.
+  const order=Math.random()>.5 ? [0,1] : [1,0];
+  order.forEach((orig, displayIndex)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="swatch";
+    b.style.background=item.a[orig];
+    b.innerHTML=`<span>${displayIndex===0 ? "A" : "B"}</span>`;
+    b.addEventListener("click",()=>{
+      selected=orig;
+      [...swatches.children].forEach(x=>x.style.borderColor="transparent");
+      b.style.borderColor="#111827";
+      nextBtn.disabled=false;
+    });
+    swatches.appendChild(b);
+  });
+}
+nextBtn.addEventListener("click",()=>{
+  if(selected===null)return;
+  if(selected===questions[index].correct)score++;
+  index++;
+  if(index<questions.length){render();}
+  else{finish();}
+});
+function finish(){
+  testCard.style.display="none";
+  resultCard.style.display="block";
+  progressBar.style.width="100%";
+  scoreEl.textContent=`${score} / ${questions.length}`;
+  if(score>=8){
+    scoreEl.className="score ok";
+    resultText.textContent="Bu ev testində yaxın sarı–mavi çalarları ayırd etməyin yaxşı göründü. Yenə də bu nəticə tibbi diaqnoz sayılmır.";
+  } else if(score>=5){
+    scoreEl.className="score warn";
+    resultText.textContent="Bəzi yaxın çalarları ayırmaq çətin oldu. Ekran, işıq və rəng parametrləri nəticəyə təsir edə bilər. Dəqiq yoxlama üçün peşəkar rəng görmə testi daha uyğundur.";
+  } else {
+    scoreEl.className="score warn";
+    resultText.textContent="Bir çox yaxın çalarda seçimlər çətin oldu. Bu, avtomatik olaraq rəng korluğu demək deyil. Dəqiq qiymətləndirmə üçün göz həkimi və ya optometristə müraciət etmək daha doğrudur.";
+  }
+}
+function restart(){
+  index=0; score=0; selected=null;
+  resultCard.style.display="none";
+  testCard.style.display="block";
+  render();
+}
+document.getElementById("againBtn").addEventListener("click",restart);
+document.getElementById("restartBtn").addEventListener("click",restart);
+render();
+</script>
+</body>
+</html>
